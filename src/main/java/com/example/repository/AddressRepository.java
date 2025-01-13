@@ -6,8 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface AddressRepository extends JpaRepository<Address, Long> {
-    List<Address> findByUser_Id(Long id);  // Исправленный метод
+    List<Address> findByUsers_Id(Long id);  // Исправленный метод
 }
+
 
 
 

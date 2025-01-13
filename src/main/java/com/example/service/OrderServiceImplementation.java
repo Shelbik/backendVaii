@@ -24,7 +24,7 @@ import com.example.repository.UserRepository;
 import com.example.request.CreateOrderRequest;
 @Service
 public class OrderServiceImplementation implements OrderService {
-	
+
 	@Autowired
 	private AddressRepository addressRepository;
 	@Autowired
@@ -35,13 +35,13 @@ public class OrderServiceImplementation implements OrderService {
 	private OrderRepository orderRepository;
 	@Autowired
 	private RestaurantRepository restaurantRepository;
-	
+
 	@Autowired
 	private UserRepository userRepository;
-	
+
 	@Autowired
 	private PaymentService paymentSerive;
-	
+
 	@Autowired
 	private NotificationService notificationService;
 
@@ -56,6 +56,7 @@ public class OrderServiceImplementation implements OrderService {
 
 		// Сохраняем адрес в базу данных
 		Address savedAddress = addressRepository.save(shippAddress);
+		user.getAddresses().add(savedAddress);
 
 		// Проверяем, что этот адрес не был добавлен ранее
 		if (!user.getAddresses().contains(savedAddress)) {
@@ -99,7 +100,9 @@ public class OrderServiceImplementation implements OrderService {
 		}
 
 		// Рассчитываем общую стоимость заказа
-		Long totalPrice = orderItems.get(0).getTotalPrice();
+		Long totalPrice = orderItems.stream()
+				.mapToLong(OrderItem::getTotalPrice)
+				.sum();
 
 		createdOrder.setTotalAmount(totalPrice);
 		createdOrder.setItems(orderItems);
@@ -136,15 +139,15 @@ public class OrderServiceImplementation implements OrderService {
            if(order==null) {
         	   throw new OrderException("Order not found with the id "+orderId);
            }
-		
+
 		    orderRepository.deleteById(orderId);
-		
+
 	}
-	
+
 	public Order findOrderById(Long orderId) throws OrderException {
 		Optional<Order> order = orderRepository.findById(orderId);
 		if(order.isPresent()) return order.get();
-		
+
 		throw new OrderException("Order not found with the id "+orderId);
 	}
 
@@ -152,19 +155,19 @@ public class OrderServiceImplementation implements OrderService {
 	public List<Order> getUserOrders(Long userId) throws OrderException {
 		List<Order> orders=orderRepository.findAllUserOrders(userId);
 		return orders;
-	} 
+	}
 
 	@Override
 	public List<Order> getOrdersOfRestaurant(Long restaurantId,String orderStatus) throws OrderException, RestaurantException {
-		
+
 			List<Order> orders = orderRepository.findOrdersByRestaurantId(restaurantId);
-			
+
 			if(orderStatus!=null) {
 				orders = orders.stream()
 						.filter(order->order.getOrderStatus().equals(orderStatus))
 						.collect(Collectors.toList());
 			}
-			
+
 			return orders;
 	}
 //    private List<MenuItem> filterByVegetarian(List<MenuItem> menuItems, boolean isVegetarian) {
@@ -172,26 +175,26 @@ public class OrderServiceImplementation implements OrderService {
 //            .filter(menuItem -> menuItem.isVegetarian() == isVegetarian)
 //            .collect(Collectors.toList());
 //}
-	
-	
+
+
 
 	@Override
 	public Order updateOrder(Long orderId, String orderStatus) throws OrderException {
 		Order order=findOrderById(orderId);
-		
+
 		System.out.println("--------- "+orderStatus);
-		
-		if(orderStatus.equals("OUT_FOR_DELIVERY") || orderStatus.equals("DELIVERED") 
+
+		if(orderStatus.equals("OUT_FOR_DELIVERY") || orderStatus.equals("DELIVERED")
 				|| orderStatus.equals("COMPLETED") || orderStatus.equals("PENDING")) {
 			order.setOrderStatus(orderStatus);
 			Notification notification=notificationService.sendOrderStatusNotification(order);
 			return orderRepository.save(order);
 		}
 		else throw new OrderException("Please Select A Valid Order Status");
-		
-		
+
+
 	}
-	
-	
+
+
 
 }

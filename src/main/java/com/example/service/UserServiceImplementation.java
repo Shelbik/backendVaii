@@ -196,8 +196,9 @@ public class UserServiceImplementation implements UserService {
 			orderRepository.deleteAll(orders);
 		}
 
+
 		// Удаление адресов
-		List<Address> addresses = addressRepository.findByUser_Id(user.getId());
+		List<Address> addresses = addressRepository.findByUsers_Id(user.getId());
 		if (!addresses.isEmpty()) {
 			System.out.println("Удаляем адреса пользователя: " + addresses.size());
 			addressRepository.deleteAll(addresses);

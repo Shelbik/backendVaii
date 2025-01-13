@@ -31,8 +31,6 @@
 		private String postalCode;
 
 		private String country;
-		@ManyToOne
-		@JoinColumn(name = "user_id")  // Эта аннотация связывает адрес с пользователем
-		private User user;  // Поле для связи с пользователем
-
+		@ManyToMany(cascade = CascadeType.ALL)
+		private List<User> users = new ArrayList<>();
 	}
