@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,7 +22,8 @@ public class Food {
     private String name;
     private String description;
     private Long price;
-    
+
+    @JsonIgnoreProperties("foods")
     @ManyToOne
     private Category foodCategory;
 
@@ -32,13 +34,13 @@ public class Food {
 
     private boolean available;
 
-//    @JsonIgnore
+    @JsonIgnoreProperties("foods")
     @ManyToOne
     private Restaurant restaurant;
 
     private boolean isVegetarian;
     private boolean isSeasonal;
-    
+    @JsonIgnoreProperties("foods")
     @ManyToMany
     private List<IngredientsItem> ingredients=new ArrayList<>();
 

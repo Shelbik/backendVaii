@@ -3,6 +3,7 @@ package com.example.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -25,11 +26,12 @@ public class Cart {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@JsonIgnoreProperties({"cart", "orders"})
 	@OneToOne
 	@JoinColumn(name = "customer_id")
 	private User customer;
 
-	@JsonManagedReference
+	@JsonIgnoreProperties("cart")
 	@OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<CartItem> items = new ArrayList<>();
 	

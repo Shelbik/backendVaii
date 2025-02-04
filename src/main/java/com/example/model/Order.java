@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -23,10 +24,10 @@ public class Order {
 	private Long id;
 
 	@ManyToOne
-	@JsonIgnore
+	@JsonIgnoreProperties("orders")
 	private User customer;
 
-	@JsonIgnore
+	@JsonIgnoreProperties("orders")
 	@ManyToOne
 	private Restaurant restaurant;
 
@@ -38,10 +39,10 @@ public class Order {
 	private Date createdAt;
 
 	@ManyToOne
+	@JsonIgnoreProperties("orders")
 	private Address deliveryAddress;
 
-	@JsonManagedReference
-
+	@JsonIgnoreProperties("order")
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<OrderItem> items;
 
@@ -50,6 +51,7 @@ public class Order {
 
 	private int totalPrice;
 
+	@JsonIgnoreProperties("order")
 	@OneToOne
 	@JoinColumn(name = "payment_id")
 	private Payment payment;

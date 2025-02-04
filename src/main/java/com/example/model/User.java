@@ -33,6 +33,11 @@
 		@ElementCollection
 		private List<RestaurantDto> favorites = new ArrayList<>();
 
+		@JsonIgnoreProperties("customer")
+		@OneToOne(mappedBy = "customer")
+		private Cart cart;
+
+		@JsonIgnoreProperties("users")
 		@ManyToMany(cascade = CascadeType.ALL)
 		@JoinTable(
 				name = "user_addresses", // Имя промежуточной таблицы

@@ -3,6 +3,7 @@
 	import com.fasterxml.jackson.annotation.JsonBackReference;
 
 	import com.fasterxml.jackson.annotation.JsonIgnore;
+	import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 	import jakarta.persistence.*;
 	import lombok.AllArgsConstructor;
 	import lombok.Data;
@@ -31,6 +32,12 @@
 		private String postalCode;
 
 		private String country;
-		@ManyToMany(cascade = CascadeType.ALL)
+
+		@JsonIgnoreProperties("addresses")
+		@ManyToMany(mappedBy = "addresses", cascade = CascadeType.ALL)
 		private List<User> users = new ArrayList<>();
+
+		@JsonIgnoreProperties("address")
+		@OneToMany(mappedBy = "address")
+		private List<Restaurant> restaurants;
 	}

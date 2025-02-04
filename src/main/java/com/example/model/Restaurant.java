@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,7 +20,8 @@ public class Restaurant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
+    @JsonIgnoreProperties("restaurants")
     @OneToOne
     private User owner;
     
@@ -27,6 +29,7 @@ public class Restaurant {
     private String description;
     private String cuisineType;
 
+    @JsonIgnoreProperties("restaurants")
     @ManyToOne
     @JoinColumn(name = "address_id")
     private Address address;
