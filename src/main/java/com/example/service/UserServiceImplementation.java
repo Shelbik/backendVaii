@@ -186,9 +186,6 @@ public class UserServiceImplementation implements UserService {
 	private void deleteRelatedData(User user) {
 
 
-
-		notificationRepository.deleteByCustomer_Id(user.getId());
-
 		// Удаление заказов
 		List<Order> orders = orderRepository.findAllUserOrders(user.getId());
 		if (!orders.isEmpty()) {
@@ -224,7 +221,7 @@ public class UserServiceImplementation implements UserService {
 	public void deleteUserById(Long id) throws Exception {
 
 
-		// Находим пользователя по id
+
 		User user = usersRepository.findById(id)
 				.orElseThrow(() -> new EntityNotFoundException("User not found for id: " + id));
 
@@ -232,7 +229,7 @@ public class UserServiceImplementation implements UserService {
 
 		// Удаляем пользователя
 		usersRepository.delete(user);
-		System.out.println("Пользователь с id " + id + " успешно удалён.");
+		System.out.println("User with " + id + " is deleted.");
 	}
 
 	private String extractEmailFromToken(String jwt) {
