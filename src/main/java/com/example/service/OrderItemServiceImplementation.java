@@ -12,22 +12,10 @@ public class OrderItemServiceImplementation implements OrderItemService {
 
 	    @Override
 	    public OrderItem createOrderIem(OrderItem orderItem) {
-	    	
 	    	OrderItem newOrderItem=new OrderItem();
-//	    	newOrderItem.setMenuItem(orderItem.getMenuItem());
-//	    	newOrderItem.setOrder(orderItem.getOrder());
 	    	newOrderItem.setQuantity(orderItem.getQuantity());
 	        return orderItemRepository.save(newOrderItem);
 	    }
-	    
-
-
-
-
-
-		
-
-
 
 
 

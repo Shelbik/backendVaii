@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.example.model.*;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -51,28 +52,28 @@ public class OrderServiceImplementation implements OrderService {
 	@Override
 	public PaymentResponse createOrder(CreateOrderRequest order, User user) throws UserException, RestaurantException, CartException, StripeException {
 
-		// Получаем адрес доставки из запроса
+		// get address delivery
 		Address shippAddress = order.getDeliveryAddress();
 
-		// Сохраняем адрес в базу данных
+		// save address to db
 		Address savedAddress = addressRepository.save(shippAddress);
 		user.getAddresses().add(savedAddress);
 
-		// Проверяем, что этот адрес не был добавлен ранее
+		// check if address exists
 		if (!user.getAddresses().contains(savedAddress)) {
-			user.getAddresses().add(savedAddress); // Добавляем новый адрес в список пользователя
+			user.getAddresses().add(savedAddress); // add new address to user
 		}
 
-		// Сохраняем пользователя с привязанным новым адресом
+		// save user with new address
 		userRepository.save(user);
 
-		// Получаем ресторан по ID
+		// get restaurant by id
 		Optional<Restaurant> restaurant = restaurantRepository.findById(order.getRestaurantId());
 		if (restaurant.isEmpty()) {
 			throw new RestaurantException("Restaurant not found with id " + order.getRestaurantId());
 		}
 
-		// Создаем новый заказ
+		// create new order
 		Order createdOrder = new Order();
 		createdOrder.setCustomer(user);
 		createdOrder.setDeliveryAddress(savedAddress);
@@ -81,13 +82,13 @@ public class OrderServiceImplementation implements OrderService {
 		createdOrder.setRestaurant(restaurant.get());
 
 
-		// Получаем корзину пользователя
+		//get users cart
 		Cart cart = cartService.findCartByUserId(user.getId());
 
-		// Создаем список для сохранения заказанных товаров
+
 		List<OrderItem> orderItems = new ArrayList<>();
 
-		// Для каждого товара в корзине создаем объект OrderItem
+
 		for (CartItem cartItem : cart.getItems()) {
 			OrderItem orderItem = new OrderItem();
 			orderItem.setFood(cartItem.getFood());
@@ -95,11 +96,11 @@ public class OrderServiceImplementation implements OrderService {
 			orderItem.setQuantity(cartItem.getQuantity());
 			orderItem.setTotalPrice(cartItem.getFood().getPrice() * cartItem.getQuantity());
 
-			// Сохраняем каждый OrderItem
+			// save each item
 			orderItems.add(orderItemRepository.save(orderItem));
 		}
 
-		// Рассчитываем общую стоимость заказа
+		// price count
 		Long totalPrice = orderItems.stream()
 				.mapToLong(OrderItem::getTotalPrice)
 				.sum();
@@ -107,14 +108,14 @@ public class OrderServiceImplementation implements OrderService {
 		createdOrder.setTotalAmount(totalPrice);
 		createdOrder.setItems(orderItems);
 
-		// Сохраняем заказ
+
 		Order savedOrder = orderRepository.save(createdOrder);
 
-		// Добавляем заказ в список заказов ресторана
+		// add order to restaurant
 		restaurant.get().getOrders().add(savedOrder);
 		restaurantRepository.save(restaurant.get());
 
-		// Создаем объект Payment
+		// create payment
 		Payment payment = new Payment();
 		payment.setOrder(savedOrder);
 		payment.setPaymentMethod("CART");
@@ -122,14 +123,14 @@ public class OrderServiceImplementation implements OrderService {
 		payment.setTotalAmount(savedOrder.getTotalAmount());
 		payment.setCreatedAt(new Date());
 
-		// Сохраняем платеж
+
 		paymentSerive.savePayment(payment);
 
-		// Связываем платеж с заказом
+		//connect order with payment
 		savedOrder.setPayment(payment);
 		orderRepository.save(savedOrder);
 
-		// Генерируем ссылку для оплаты
+		// link generator for payment
 		return paymentSerive.generatePaymentLink(savedOrder);
 	}
 
@@ -153,8 +154,7 @@ public class OrderServiceImplementation implements OrderService {
 
 	@Override
 	public List<Order> getUserOrders(Long userId) throws OrderException {
-		List<Order> orders=orderRepository.findAllUserOrders(userId);
-		return orders;
+		return orderRepository.findAllUserOrders(userId);
 	}
 
 	@Override
@@ -170,11 +170,7 @@ public class OrderServiceImplementation implements OrderService {
 
 			return orders;
 	}
-//    private List<MenuItem> filterByVegetarian(List<MenuItem> menuItems, boolean isVegetarian) {
-//    return menuItems.stream()
-//            .filter(menuItem -> menuItem.isVegetarian() == isVegetarian)
-//            .collect(Collectors.toList());
-//}
+
 
 
 
@@ -196,5 +192,14 @@ public class OrderServiceImplementation implements OrderService {
 	}
 
 
+	@Transactional
+	public void handleDeletedFood(Long foodId) {
+		// find all pending orders with this food
+		List<Order> ordersToDelete = orderRepository.findByFoodAndStatus(foodId, "PENDING");
 
+		// delete them
+		if (!ordersToDelete.isEmpty()) {
+			orderRepository.deleteAll(ordersToDelete);
+		}
+	}
 }

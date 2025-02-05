@@ -91,6 +91,7 @@ public class AuthController {
 		User createdUser = new User();
 		createdUser.setEmail(email);
 		createdUser.setFullName(fullName);
+		//hashovanie hesla
 		createdUser.setPassword(passwordEncoder.encode(password));
 		createdUser.setRole(role);
 
