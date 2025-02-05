@@ -44,6 +44,44 @@ public class FoodServiceImplementation implements FoodService {
 			throws FoodException,
 	RestaurantException {
 
+		// Check if the main request object exists
+		if (req == null) {
+			throw new FoodException("Request cannot be null");
+		}
+
+		// Validate required fields
+		if (req.getName() == null || req.getName().trim().isEmpty()) {
+			throw new FoodException("Food name cannot be empty");
+		}
+
+		if (req.getDescription() == null || req.getDescription().trim().isEmpty()) {
+			throw new FoodException("Food description cannot be empty");
+		}
+
+		// Validate price
+		if (req.getPrice() <= 0) {
+			throw new FoodException("Price must be greater than 0");
+		}
+
+		// Validate images list
+		if (req.getImages() == null || req.getImages().isEmpty()) {
+			throw new FoodException("At least one image is required");
+		}
+
+		// Check required relationships
+		if (category == null) {
+			throw new FoodException("Food category cannot be null");
+		}
+
+		if (restaurant == null) {
+			throw new RestaurantException("Restaurant cannot be null");
+		}
+
+		// Validate ingredients if required
+		if (req.getIngredients() == null || req.getIngredients().isEmpty()) {
+			throw new FoodException("Food must have at least one ingredient");
+		}
+
 			Food food=new Food();
 			food.setFoodCategory(category);
 			food.setCreationDate(new Date());
@@ -108,7 +146,7 @@ public class FoodServiceImplementation implements FoodService {
 	}
 	private List<Food> filterByNonveg(List<Food> foods, boolean isNonveg) {
 	    return foods.stream()
-	            .filter(food -> food.isVegetarian() == false)
+	            .filter(food -> !food.isVegetarian())
 	            .collect(Collectors.toList());
 	}
 	private List<Food> filterBySeasonal(List<Food> foods, boolean isSeasonal) {
