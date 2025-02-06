@@ -9,6 +9,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Data
@@ -23,8 +25,9 @@ public class CartItem {
     @ManyToOne
     private Cart cart;
 
-    @JsonIgnoreProperties({"cart", "restaurant"})
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "food_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Food food;
     
     private int quantity;

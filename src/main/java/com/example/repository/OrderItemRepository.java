@@ -6,4 +6,5 @@ import com.example.model.OrderItem;
 
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
+
 }

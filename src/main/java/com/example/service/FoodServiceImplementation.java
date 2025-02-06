@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.example.model.Order;
+import com.example.repository.CartItemRepository;
+import com.example.repository.OrderRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +27,12 @@ import com.example.request.CreateFoodRequest;
 public class FoodServiceImplementation implements FoodService {
 	@Autowired
 	private foodRepository foodRepository;
+
+	@Autowired
+	private CartItemRepository cartItemRepository;
+
+	@Autowired
+	private OrderRepository orderRepository;
 	
 
 	
@@ -100,13 +110,47 @@ public class FoodServiceImplementation implements FoodService {
 		
 	}
 
-	@Override
-	public void deleteFood(Long foodId) throws FoodException {
-		Food food=findFoodById(foodId);
-		food.setRestaurant(null);;
-//		foodRepository.save(food);
-		foodRepository.delete(food);
 
+	@Override
+	@Transactional
+	public void deleteFood(Long foodId) throws FoodException {
+		// Find the food first
+		Food food = findFoodById(foodId);
+		if (food == null) {
+			throw new FoodException("Food not found with id: " + foodId);
+		}
+
+		try {
+			// Delete cart items first
+			cartItemRepository.deleteByFoodId(foodId);
+
+			// Find and delete pending orders
+			List<Order> pendingOrders = orderRepository.findByFoodAndStatus(foodId, "PENDING");
+			if (!pendingOrders.isEmpty()) {
+				// Check if orders can be deleted
+				for (Order order : pendingOrders) {
+					if (!"PENDING".equals(order.getOrderStatus())) {
+						throw new FoodException("Cannot delete food with active orders");
+					}
+				}
+				orderRepository.deleteAll(pendingOrders);
+			}
+
+			// Remove restaurant association
+			Restaurant restaurant = food.getRestaurant();
+			if (restaurant != null) {
+				restaurant.getFoods().remove(food);
+				food.setRestaurant(null);
+			}
+
+			// 4. Flush to ensure all changes are synchronized
+			foodRepository.flush();
+
+			// Finally delete the food
+			foodRepository.delete(food);
+		} catch (Exception e) {
+			throw new FoodException("Error deleting food: " + e.getMessage());
+		}
 	}
 
 
@@ -169,8 +213,8 @@ public class FoodServiceImplementation implements FoodService {
 	@Override
 	public List<Food> searchFood(String keyword) {
 		List<Food> items=new ArrayList<>();
-		
-		if(keyword!="") {
+
+		if(keyword != null && !keyword.trim().isEmpty()) {
 			System.out.println("keyword -- "+keyword);
 			items=foodRepository.searchByNameOrCategory(keyword);
 		}
