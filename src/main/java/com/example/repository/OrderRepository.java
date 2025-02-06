@@ -18,6 +18,6 @@ public interface OrderRepository extends JpaRepository<Order,Long> {
 
 	@Query("SELECT DISTINCT o FROM Order o JOIN o.items i WHERE i.food.id = :foodId AND o.orderStatus = :status")
 	List<Order> findByFoodAndStatus(@Param("foodId") Long foodId, @Param("status") String status);
-
-
+	@Query("SELECT DISTINCT o FROM Order o JOIN o.items i WHERE i.food.id = :foodId")
+	List<Order> findByItemsFoodId(@Param("foodId") Long foodId);
 }

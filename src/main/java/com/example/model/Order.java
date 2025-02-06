@@ -43,6 +43,7 @@ public class Order {
 	private Address deliveryAddress;
 
 	@JsonIgnoreProperties("order")
+	@JoinColumn(name = "order_id")
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<OrderItem> items;
 
