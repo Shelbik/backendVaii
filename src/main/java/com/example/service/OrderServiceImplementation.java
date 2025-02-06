@@ -51,22 +51,25 @@
 
 		@Override
 		public PaymentResponse createOrder(CreateOrderRequest order, User user) throws UserException, RestaurantException, CartException, StripeException {
-			Address shippAddress;
-				// get address delivery
-			 shippAddress = order.getDeliveryAddress();
+			Address deliveryAddress = order.getDeliveryAddress();
+			Address savedAddress;
 
+			// Check if user already has this address
+			Optional<Address> existingAddress = user.getAddresses().stream()
+					.filter(addr -> addr.getStreetAddress().equals(deliveryAddress.getStreetAddress())
+							&& addr.getCity().equals(deliveryAddress.getCity())
+							&& addr.getPostalCode().equals(deliveryAddress.getPostalCode()))
+					.findFirst();
 
-			// save address to db
-			Address savedAddress = addressRepository.save(shippAddress);
-			user.getAddresses().add(savedAddress);
-
-			// check if address exists
-			if (!user.getAddresses().contains(savedAddress)) {
-				user.getAddresses().add(savedAddress); // add new address to user
+			if (existingAddress.isPresent()) {
+				// Use existing address
+				savedAddress = existingAddress.get();
+			} else {
+				// Save new address
+				savedAddress = addressRepository.save(deliveryAddress);
+				user.getAddresses().add(savedAddress);
+				userRepository.save(user);
 			}
-
-			// save user with new address
-			userRepository.save(user);
 
 			// get restaurant by id
 			Optional<Restaurant> restaurant = restaurantRepository.findById(order.getRestaurantId());

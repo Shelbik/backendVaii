@@ -31,6 +31,9 @@ public class JwtTokenValidator extends OncePerRequestFilter {
 			throws ServletException, IOException {
 		String jwt = request.getHeader(JwtConstant.JWT_HEADER);
 
+		// Debug JWT header
+		System.out.println("Received JWT header: " + jwt);
+
 		if(jwt!=null) {
 			jwt=jwt.substring(7);
 
